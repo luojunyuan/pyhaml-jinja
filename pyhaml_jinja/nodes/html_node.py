@@ -14,23 +14,21 @@ class HtmlNode(Node):
   """Represents a standard HTML node with a tag, attributes, and children."""
 
   TAG_REGEX = re.compile(
-      r'^'  # Start of the line.
-      r'%'  # % is required.
-      r'(?P<condensed>-)?'  # The - optionally signifies a condensed tag.
-      r'(?P<tag>\w+)'  # tag name is required.
-      r'(?P<shortcut_attrs>[\.#][^()]+?)?'  # .cls1.cls2#id is optional.
-      r'(?P<attrs>\(.+\))?'  # (a="1", b="2") are optional.
-      r'(?P<nested>:)?' # Nesting is optional.
-      r'(?P<content>\s+.+)?'  # Inline-content is optional.
-      r'$'  # End of the line.
+      r'^'  # Start of the line
+      r'%'  # % is required
+      r'(?P<tag>\w+)'  # tag name is required
+      r'(?P<shortcut_attrs>[\.#][^()]+?)?'  # .cls1.cls2#id is optional
+      r'(?P<attrs>\(.+\))?'  # (a="1", b="2") are optional
+      r'(?P<nested>:)?' # Nesting is optional
+      r'(?P<content>\s+.+)?'  # Inline-content is optional
+      r'$'  # End of the line
   )
 
   SELF_CLOSING_TAGS = ['br', 'hr', 'img', 'input', 'link', 'meta']
 
-  def __init__(self, tag, attributes=None, condensed=False):
+  def __init__(self, tag, attributes=None):
     self.tag = tag
     self.attributes = attributes or {}
-    self.condensed = condensed
     super(HtmlNode, self).__init__()
 
   def add_attribute(self, key, value):
@@ -62,7 +60,7 @@ class HtmlNode(Node):
     if not match:
       raise ValueError('Text did not match %s' % cls.TAG_REGEX.pattern)
 
-    # Create the node with the proper tag.
+    # Create the node with the proper tag
     tag = match.group('tag')
 
     if tag in cls.SELF_CLOSING_TAGS:
@@ -70,16 +68,13 @@ class HtmlNode(Node):
     else:
       node = cls(tag=tag)
 
-    # Update the condensed property on the node.
-    node.condensed = (match.group('condensed') == '-')
-
     # Handle shortcut attributes ('.cls#id')
     shortcut_attrs = match.group('shortcut_attrs')
     if shortcut_attrs:
       # Splits into ['.', 'cls', '#', 'id']
       parts = re.split(r'([\.#])', shortcut_attrs)[1:]
       # Zips together into [('.', 'cls'), ('#', 'id')]
-      parts = zip(parts[0::2], parts[1::2])
+      parts = list(zip(parts[0::2], parts[1::2]))
 
       for prefix, value in parts:
         if prefix == '.':
@@ -99,9 +94,6 @@ class HtmlNode(Node):
       # the first equal sign.
       attr_pairs = [pair.strip().split('=', 1) for pair in attr_pairs]
       for (key, value) in attr_pairs:
-        if not value.startswith('"') or not value.endswith('"'):
-          raise ValueError(
-              'Invalid attribute provided: "%s" for key "%s"' % (value, key))
         node.add_attribute(key, value[1:-1])
 
     # Handle in-line content.
@@ -132,7 +124,7 @@ class HtmlNode(Node):
   @classmethod
   def _render_attributes(cls, attributes):
     """Given a dictionary, return an HTML-style attribute string."""
-    items = (attributes or {}).iteritems()
+    items = iter((attributes or {}).items())
     return ' '.join('%s="%s"' % (k, v) for (k, v) in items)
 
   def render_attributes(self):
@@ -154,22 +146,6 @@ class HtmlNode(Node):
 
   def render_end(self):
     return '</{tag}>'.format(tag=self.tag)
-
-  def render_lines(self, *args, **kwargs):
-    lines = super(HtmlNode, self).render_lines(*args, **kwargs)
-    if self.condensed:
-      # Check if we have at least two items and condense the first two.
-      if len(lines) >= 2:
-        first, second = lines[:2]
-        del lines[0]
-        lines[0] = first.rstrip() + second.lstrip()
-
-      # Check if we still have at least two items and condense the last two.
-      if len(lines) >= 2:
-        first, second = lines[-2:]
-        del lines[-1]
-        lines[-1] = first.rstrip() + second.lstrip()
-    return lines
 
 
 class SelfClosingHtmlNode(HtmlNode, ChildlessNode):

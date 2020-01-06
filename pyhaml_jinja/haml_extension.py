@@ -35,7 +35,7 @@ class HamlExtension(Extension):
       renderer = Renderer(source,
           indent_string=self.environment.haml_indent_string,
           newline_string=self.environment.haml_newline_string)
-    except TemplateSyntaxError, e:
+    except TemplateSyntaxError as e:
       raise TemplateSyntaxError(e.message, e.lineno, name=name, filename=filename)
 
     return renderer.render()

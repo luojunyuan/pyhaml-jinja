@@ -41,7 +41,7 @@ class Parser(object):
       # Figure out how far indented the current line is.
       try:
         indent = cls.get_indent_level(line)
-      except Exception, exception:
+      except Exception as exception:
         raise TemplateIndentationError(exception.message, line_number)
 
       # Either increase the indentation level, or pop nodes off to
@@ -75,7 +75,7 @@ class Parser(object):
       else:
         try:
           node = cls.parse_line(line.strip())
-        except Exception, exception:
+        except Exception as exception:
           raise TemplateSyntaxError(exception.message, line_number)
 
       # If this was a nested line, we should have a chain of single children

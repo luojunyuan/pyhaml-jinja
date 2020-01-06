@@ -83,7 +83,7 @@ class JinjaNode(Node):
         break
 
       # If we might be able to close an open tag.
-      if char in chars.values():
+      if char in list(chars.values()):
         # The stack is not empty and this tag closes it.
         if stack and char == stack[-1]:
           stack.pop()
@@ -91,11 +91,11 @@ class JinjaNode(Node):
 
         # The stack is not empty, but this tag didn't close it, AND it's not a
         # valid opener. Throw an error.
-        elif stack and char not in chars.keys():
+        elif stack and char not in list(chars.keys()):
           raise ValueError('Found unexpected closing tag "%s".' % char)
 
       # If we're opening, add the proper closing tag to the stack.
-      if char in chars.keys():
+      if char in list(chars.keys()):
         stack.append(chars.get(char))
 
       # TODO: Figure out what we do with backslash escaping characters.
